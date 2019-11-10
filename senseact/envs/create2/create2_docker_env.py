@@ -222,36 +222,36 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             self.move(4.999999760000001, -1)  # (78-22) * r
             self.turn(90)
             self.move(3.1696427050000002, -1)  # 35.5 * r
-            # TODO: self.turn toward dock
+            self.turn(-57.628221917390434)  # turn toward dock
         elif (case == 5):
             self.move(4.999999760000001, -1)  # (78-22) * r
             self.turn(-90)
             self.move(3.1696427050000002, -1)  # 35.5 * r
-            # TODO: self.turn toward dock
+            self.turn(57.628221917390434)  # turn toward dock
         elif (case == 6):
             self.move(2.4999998800000003, -1)  # (50-22) * r
             self.turn(90)
             self.move(3.1696427050000002, -1)  # 35.5 * r
-            # TODO: self.turn toward dock
+            self.turn(-38.26398878588065)  # turn toward dock
         elif (case == 7):
             self.move(2.4999998800000003, -1)  # (50-22) * r
             self.turn(-90)
             self.move(3.1696427050000002, -1)  # 35.5 * r
-            # TODO: self.turn toward dock
+            self.turn(38.26398878588065)  # turn toward dock
         elif (case == 8):
             self.move(1.42857136, -1)  # (38-22) * r
             self.turn(90)
             self.move(3.1696427050000002, -1)  # 35.5 * r
             self.turn(-90)
             self.move(1.42857136, 1)  # forward (38-22) * r
-            # TODO: turn toward dock
+            self.turn(90)  # turn toward dock
         elif (case == 9):
             self.move(1.42857136, -1)  # (38-22) * r
             self.turn(-90)
             self.move(3.1696427050000002, -1)  # 35.5 * r
             self.turn(90)
             self.move(1.42857136, 1)  # forward (38-22) * r
-            # TODO: turn toward dock
+            self.turn(-90)  # turn toward dock
         else:
             print('reset_to_position: wrong case')
 
@@ -312,7 +312,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         # drive fast toward a random places, then stop (using drive_direct since it's easier to calculate
         # the rotation angle)
         logging.info("Moving Create2 into position.")
-        for i in range(6, 7):
+        for i in range(9):
             print('start ', i+1)
             self._write_opcode('safe')
             time.sleep(0.1)
