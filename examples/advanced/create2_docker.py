@@ -36,8 +36,11 @@ def main():
     tf_set_seeds(np.random.randint(1, 2**31 - 1))
 
     # Create the Create2 docker environment
-    env = Create2DockerEnv(30, port='/dev/ttyUSB0', ir_window=20, ir_history=1,
-                           obs_history=1, dt=0.045, random_state=rand_state)
+    env = Create2DockerEnv(30, np.full(9, 1/9),
+                           port='/dev/ttyUSB0', ir_window=20,
+                           ir_history=1,
+                           obs_history=1, dt=0.045,
+                           random_state=rand_state)
     env = NormalizedEnv(env)
 
     # Start environment processes

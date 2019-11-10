@@ -30,8 +30,13 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         * move the gym env dependency to some base class
     """
 
-    def __init__(self, episode_length_time, port='/dev/ttyUSB0', ir_window=20, ir_history=1,
-                 obs_history=1, dt=0.015, auto_unwind=True, rllab_box=False, **kwargs):
+    def __init__(self, episode_length_time,
+                 reset_distribution,
+                 port='/dev/ttyUSB0',
+                 ir_window=20, ir_history=1,
+                 obs_history=1, dt=0.015, 
+                 auto_unwind=True,
+                 rllab_box=False, **kwargs):
         """Constructor of the environment.
 
         Args:
@@ -45,6 +50,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             rllab_box:            whether we are using rllab algorithm or not
             **kwargs:             any other arguments to be passed to the base class
         """
+        self.reset_distribution = reset_distribution
         self._ir_window = ir_window
         self._ir_history = ir_history
         self._obs_history = obs_history
@@ -273,23 +279,16 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
         # check if next episode should start with random reset or not
-        random_reset = False
-        if sensor_window[-1][0]['charging sources available'] > 0:
-            random_reset = True
-        else:
+        if sensor_window[-1][0]['charging sources available'] == 0:
             # send the Create2 to dock to start
             logging.info("Sending Create2 to dock.")
             self._write_opcode('seek_dock')
-            # dock_wait = 20
-            while sensor_window[-1][0]['charging sources available'] == 0:  #  and dock_wait > 0:
+            while sensor_window[-1][0]['charging sources available'] == 0:
                 time.sleep(1.0)
-                # dock_wait -= 1
-
                 sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
         if sensor_window[-1][0]['battery charge'] <= self._min_battery:
             self._wait_until_charged()
-
             sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
         # Always switch to SAFE mode to run an episode, so that Create2 will switch to PASSIVE on the
@@ -297,59 +296,29 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         # the non-responsive sleep mode that happens at the 60 seconds mark. TO INVESTIGATE
         logging.info("Setting Create2 into safe mode.")
         self._write_opcode('safe')
-        time.sleep(0.1)
+        time.sleep(0.5)
 
-        """
-        # after charging/docked, try to drive away from the dock if still on it
-        if sensor_window[-1][0]['charging sources available'] > 0:
-            logging.info("Undocking the Create2.")
-            self._write_opcode('drive_direct', -250, -250)
-            time.sleep(0.75)
-            self._write_opcode('drive_direct', 0, 0)
-            time.sleep(0.1)
-        """
-        
-        # drive fast toward a random places, then stop (using drive_direct since it's easier to calculate
+        # drive fast toward a random places, then stop
+        # (using drive_direct since it's easier to calculate
         # the rotation angle)
         logging.info("Moving Create2 into position.")
-        for i in range(9):
-            print('start ', i+1)
-            self._write_opcode('safe')
-            time.sleep(0.1)
-            self.reset_to_position(i+1)
-            time.sleep(5)
-            self._write_opcode('seek_dock')
-            sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
-            # dock_wait = 20
-            while sensor_window[-1][0]['charging sources available'] == 0:
-                time.sleep(1.0)
-                sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
-            print('end ', i)
-        exit()
-
-        """
-        if random_reset:
-            target_values = [self._rand_obj_.uniform(r[0], r[1]) for r in [[-250, -50], [-250, -50]]]
-        else:
-            target_values = [-100, -100]
-
-        self._write_opcode('drive_direct', *target_values)
-        rand_state_array_type, rand_state_array_size, rand_state_array = utils.get_random_state_array(
-            self._rand_obj_.get_state()
+        self.reset_to_position(
+            np.random.choice(
+                range(1, 10), p=self.reset_distribution
+            )
         )
-        np.copyto(self._shared_rstate_array_, np.frombuffer(rand_state_array, dtype=rand_state_array_type))
-        time.sleep(2.5)
-        self._write_opcode('drive', 0, 0)
+        time.sleep(0.5)
 
-        # find the rotation angle (right wheel distance - left wheel distance) / wheel base distance
-        self._total_rotation += (target_values[1] * 1.5 - target_values[0] * 1.5) / 235.0 * 180.0 / 3.14
-        """
-        self._wait_until_unwinded()
+        # self._wait_until_unwinded()
 
         # make sure in SAFE mode in case the random drive caused switch to PASSIVE, or
         # create2 stuck somewhere and require human reset (don't want an episode to start
         # until fixed, otherwise we get a whole bunch of one step episodes)
         sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
+
+        if sensor_window[-1][0]['oi mode'] != 2:
+            print("_reset_: we are not in safe mode!")
+        """
         while sensor_window[-1][0]['oi mode'] != 2:
             logging.warning("Create2 not in SAFE mode, reattempting... (might require human intervention).")
             self._write_opcode('full')
@@ -365,8 +334,9 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             self._wait_until_unwinded()
             sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
+        """
         # don't want to state during reset pollute the first sensation
-        time.sleep(2 * self._internal_timing)
+        time.sleep(5 * self._internal_timing)
 
         logging.info("Reset completed.")
 
