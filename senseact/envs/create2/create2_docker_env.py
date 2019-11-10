@@ -195,6 +195,66 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             ([create2_config.OPCODE_NAME_TO_CODE[self._main_op]], action))
         np.copyto(self._prev_action_, action)
 
+    def move(self, num_seconds, direction):
+        # direction = 1 is forward
+        # direction = -1 is reverse
+        assert(direction == 1 or direction == -1)
+
+        self._write_opcode('drive_direct', 100 * direction, 100 * direction)
+        time.sleep(num_seconds)
+        self._write_opcode('drive_direct', 0, 0)
+
+    def turn(self, degree):
+        # positive degree is anti-clockwise
+        self._write_opcode('drive', 100, np.sign(degree))
+        time.sleep(1.62 * abs(degree) / 90)
+        self._write_opcode('drive', 0, 0)
+
+    def reset_to_position(self, case):
+        # r = 0.08928571, 2.5 seconds for 28 cm, r = time / distance
+        if (case == 1):
+            self.move(1.42857136, -1)  # reverse (38-22) * r
+        elif (case == 2):
+            self.move(3.21428556, -1)  # (58-22) * r
+        elif (case == 3):
+            self.move(4.999999760000001, -1)  # (78-22) * r
+        elif (case == 4):
+            self.move(4.999999760000001, -1)  # (78-22) * r
+            self.turn(90)
+            self.move(3.1696427050000002, -1)  # 35.5 * r
+            # TODO: self.turn toward dock
+        elif (case == 5):
+            self.move(4.999999760000001, -1)  # (78-22) * r
+            self.turn(-90)
+            self.move(3.1696427050000002, -1)  # 35.5 * r
+            # TODO: self.turn toward dock
+        elif (case == 6):
+            self.move(2.4999998800000003, -1)  # (50-22) * r
+            self.turn(90)
+            self.move(3.1696427050000002, -1)  # 35.5 * r
+            # TODO: self.turn toward dock
+        elif (case == 7):
+            self.move(2.4999998800000003, -1)  # (50-22) * r
+            self.turn(-90)
+            self.move(3.1696427050000002, -1)  # 35.5 * r
+            # TODO: self.turn toward dock
+        elif (case == 8):
+            self.move(1.42857136, -1)  # (38-22) * r
+            self.turn(90)
+            self.move(3.1696427050000002, -1)  # 35.5 * r
+            self.turn(-90)
+            self.move(1.42857136, 1)  # forward (38-22) * r
+            # TODO: turn toward dock
+        elif (case == 9):
+            self.move(1.42857136, -1)  # (38-22) * r
+            self.turn(-90)
+            self.move(3.1696427050000002, -1)  # 35.5 * r
+            self.turn(90)
+            self.move(1.42857136, 1)  # forward (38-22) * r
+            # TODO: turn toward dock
+        else:
+            print('reset_to_position: wrong case')
+
     def _reset_(self):
         """The required _reset_ interface.
 
@@ -220,10 +280,10 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             # send the Create2 to dock to start
             logging.info("Sending Create2 to dock.")
             self._write_opcode('seek_dock')
-            dock_wait = 20
-            while sensor_window[-1][0]['charging sources available'] == 0 and dock_wait > 0:
+            # dock_wait = 20
+            while sensor_window[-1][0]['charging sources available'] == 0:  #  and dock_wait > 0:
                 time.sleep(1.0)
-                dock_wait -= 1
+                # dock_wait -= 1
 
                 sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
@@ -239,6 +299,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         self._write_opcode('safe')
         time.sleep(0.1)
 
+        """
         # after charging/docked, try to drive away from the dock if still on it
         if sensor_window[-1][0]['charging sources available'] > 0:
             logging.info("Undocking the Create2.")
@@ -246,11 +307,27 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             time.sleep(0.75)
             self._write_opcode('drive_direct', 0, 0)
             time.sleep(0.1)
-
+        """
+        
         # drive fast toward a random places, then stop (using drive_direct since it's easier to calculate
         # the rotation angle)
         logging.info("Moving Create2 into position.")
+        for i in range(6, 7):
+            print('start ', i+1)
+            self._write_opcode('safe')
+            time.sleep(0.1)
+            self.reset_to_position(i+1)
+            time.sleep(5)
+            self._write_opcode('seek_dock')
+            sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
+            # dock_wait = 20
+            while sensor_window[-1][0]['charging sources available'] == 0:
+                time.sleep(1.0)
+                sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
+            print('end ', i)
+        exit()
 
+        """
         if random_reset:
             target_values = [self._rand_obj_.uniform(r[0], r[1]) for r in [[-250, -50], [-250, -50]]]
         else:
@@ -266,6 +343,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
 
         # find the rotation angle (right wheel distance - left wheel distance) / wheel base distance
         self._total_rotation += (target_values[1] * 1.5 - target_values[0] * 1.5) / 235.0 * 180.0 / 3.14
+        """
         self._wait_until_unwinded()
 
         # make sure in SAFE mode in case the random drive caused switch to PASSIVE, or
