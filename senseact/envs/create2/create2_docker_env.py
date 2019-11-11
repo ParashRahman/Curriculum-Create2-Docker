@@ -447,8 +447,8 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             # move it out of the dock to avoid the weird non-responsive sleep mode (the non-responsive sleep
             # mode can happen on any mode while on the dock, but only detectable when in PASSIVE mode)
             self._write_opcode('safe')
-            time.sleep(0.1)
-            self._write_opcode('drive_direct', -100, -100)
+            #time.sleep(0.1)
+            #self._write_opcode('drive_direct', -100, -100)
             time.sleep(0.5)
             self._write_opcode('drive_direct', 0, 0)
             time.sleep(0.1)

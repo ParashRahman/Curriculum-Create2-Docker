@@ -13,8 +13,11 @@ import baselines.common.tf_util as U
 import senseact.devices.create2.create2_config as create2_config
 
 from multiprocessing import Process, Value, Manager
-from baselines.trpo_mpi.trpo_mpi import learn
+# from baselines.trpo_mpi.trpo_mpi import learn
 from baselines.ppo1.mlp_policy import MlpPolicy
+from baselines.ppo1.pposgd_simple import learn
+# from baselines.ppo2.ppo2 import learn
+# from baselines.ppo2.model import Model
 
 from senseact.envs.create2.create2_docker_env import Create2DockerEnv
 from senseact.utils import tf_set_seeds, NormalizedEnv
@@ -24,7 +27,9 @@ from helper import create_callback
 def main():
     # optionally use a pretrained model
     load_model_data = None
-    hidden_sizes = (32, 32)
+
+    hidden_sizes = (64, 64, 64)
+
     if len(sys.argv) > 1:
         load_model_path = sys.argv[1]
         load_model_data = pkl.load(open(load_model_path, 'rb'))
@@ -36,7 +41,8 @@ def main():
     tf_set_seeds(np.random.randint(1, 2**31 - 1))
 
     # Create the Create2 docker environment
-    env = Create2DockerEnv(30, np.full(9, 1/9),
+    # np.full(9, 1/9)
+    env = Create2DockerEnv(30, np.array([1, 0, 0, 0, 0, 0, 0, 0, 0]),
                            port='/dev/ttyUSB0', ir_window=20,
                            ir_history=1,
                            obs_history=1, dt=0.045,
@@ -65,19 +71,21 @@ def main():
     # Create callback function for logging data from baselines TRPO learn
     kindred_callback = create_callback(shared_returns, load_model_data)
 
-    # Train baselines TRPO
-    learn(env, policy_fn,
-          max_timesteps=40000,
-          timesteps_per_batch=2048,
-          max_kl=0.05,
-          cg_iters=10,
-          cg_damping=0.1,
-          vf_iters=5,
-          vf_stepsize=0.001,
-          gamma=0.995,
-          lam=0.995,
-          callback=kindred_callback
-          )
+    # Train baselines PPO
+    learn(env,
+          policy_fn,
+          max_timesteps=1e6,
+          timesteps_per_actorbatch=512,
+          clip_param=0.2,
+          entcoeff=0.0,
+          optim_epochs=10,
+          optim_stepsize=0.00005,
+          optim_batchsize=16,
+          gamma=0.96836,
+          lam=0.99944,
+          schedule="linear",
+          callback=kindred_callback,
+    )
 
     # Safely terminate plotter process
     plot_running.value = 0  # shutdown ploting process
