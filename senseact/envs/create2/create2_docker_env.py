@@ -268,6 +268,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
 
         This method does the handling of charging the Create2, repositioning, and set to the correct mode.
         """
+        print("Resetting...")
         logging.info("Resetting...")
         self._episode_step_.value = 0
         np.copyto(self._prev_action_, np.array([0, 0]))
@@ -283,9 +284,18 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         # check if next episode should start with random reset or not
         if sensor_window[-1][0]['charging sources available'] == 0:
             # send the Create2 to dock to start
+            print("Sending Create2 to dock.")
             logging.info("Sending Create2 to dock.")
             self._write_opcode('seek_dock')
+
+            iteration = 0
             while sensor_window[-1][0]['charging sources available'] == 0:
+                print('dock')
+
+                iteration += 1
+                if (iteration % 60 == 0):
+                    self._write_opcode('seek_dock')
+
                 time.sleep(1.0)
                 sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
