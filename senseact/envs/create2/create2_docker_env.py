@@ -64,6 +64,8 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         self._min_battery = 1700
         self._max_battery = 2600
 
+        self.startstate = -1
+
         # get the opcode for our main action (only 1 action)
         self._main_op = 'drive_direct'
         self._extra_ops = ['safe', 'seek_dock', 'drive']
@@ -302,11 +304,10 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         # (using drive_direct since it's easier to calculate
         # the rotation angle)
         logging.info("Moving Create2 into position.")
-        self.reset_to_position(
-            np.random.choice(
-                range(1, 10), p=self.reset_distribution
-            )
+        self.startstate = np.random.choice(
+            range(1, 10), p=self.reset_distribution
         )
+        self.reset_to_position(self.startstate)
         time.sleep(0.5)
 
         # self._wait_until_unwinded()
@@ -339,6 +340,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         time.sleep(5 * self._internal_timing)
 
         logging.info("Reset completed.")
+        return self.startstate
 
     def _check_done(self, env_done):
         """The required _check_done_ interface.
@@ -502,3 +504,4 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
 
     def terminate(self):
         super(Create2DockerEnv, self).close()
+

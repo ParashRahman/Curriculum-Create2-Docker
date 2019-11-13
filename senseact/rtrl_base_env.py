@@ -90,7 +90,7 @@ class RTRLBaseEnv(object):
                                                    dtype=rand_state_array_type)
         np.copyto(self._shared_rstate_array_, np.frombuffer(rand_state_array, dtype=rand_state_array_type))
         self._reset_flag = Value('i', 0)
-
+        self.ss = Value('i', -1)
 
         self._action_buffer = SharedBuffer(
             buffer_len=SharedBuffer.DEFAULT_BUFFER_LEN,
@@ -252,8 +252,10 @@ class RTRLBaseEnv(object):
             A numpy array with observation data.
         """
         if self._run_mode == 'singlethread':
+            print('SINGLE THREAD MODE')
             return self._reset_singlethread()
         else:
+            print('MULTI THREAD MODE')
             return self._reset_flag_update(blocking=blocking)
 
     def close(self):
@@ -404,11 +406,11 @@ class RTRLBaseEnv(object):
 
     def _reset_singlethread(self):
 
-        self._reset_()
+        self.ss.value = self._reset_()
         self._new_obs_time = time.time()
         obs, _, _ = self.sense()
 
-        return obs
+        return self.ss.value, obs
 
     def _sense_singlethread(self):
         """Implements _sense for single thread mode.
@@ -449,7 +451,7 @@ class RTRLBaseEnv(object):
         # Retrieve the first observation of the new episode
         obs, _, _ = self.sense()
 
-        return obs
+        return self.ss.value, obs
 
     def _run_loop_(self):
         """Main manager method for multithread and multiprocess modes.
@@ -471,7 +473,8 @@ class RTRLBaseEnv(object):
 
             if self._reset_flag.value:
                 # Perform reset procedure defined by the environment class.
-                self._reset_()
+                self.ss.value = self._reset_()
+                print('SS', self.ss.value)
                 # Signal that the reset is complete.
                 # The `reset` function in the main thread may block on this flag
                 self._reset_flag.value = 0

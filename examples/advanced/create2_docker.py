@@ -26,14 +26,12 @@ from helper import create_callback
 
 def main():
     # optionally use a pretrained model
-    load_model_data = None
+    load_model_path = None
 
-    hidden_sizes = (64, 64, 64)
+    hidden_sizes = (64, 64)
 
     if len(sys.argv) > 1:
         load_model_path = sys.argv[1]
-        load_model_data = pkl.load(open(load_model_path, 'rb'))
-        hidden_sizes = load_model_data['hidden_sizes']
 
     # use fixed random state
     rand_state = np.random.RandomState(1).get_state()
@@ -41,8 +39,8 @@ def main():
     tf_set_seeds(np.random.randint(1, 2**31 - 1))
 
     # Create the Create2 docker environment
-    # np.full(9, 1/9)
-    env = Create2DockerEnv(30, np.array([1, 0, 0, 0, 0, 0, 0, 0, 0]),
+    # np.array([1, 0, 0, 0, 0, 0, 0, 0, 0])
+    env = Create2DockerEnv(30, np.full(9, 1/9),
                            port='/dev/ttyUSB0', ir_window=20,
                            ir_history=1,
                            obs_history=1, dt=0.045,
@@ -60,37 +58,51 @@ def main():
             hid_size=hidden_sizes[0], num_hid_layers=len(hidden_sizes))
 
     # Create and start plotting process
-    plot_running = Value('i', 1)
-    shared_returns = Manager().dict({"write_lock": False,
-                                     "episodic_returns": [],
-                                     "episodic_lengths": [], })
+    #plot_running = Value('i', 1)
+    shared_returns = Manager().dict({
+        "write_lock": False,
+        "episodic_returns": [],
+        "episodic_lengths": [],
+        "episodic_ss": [],
+    })
     # Spawn plotting process
-    pp = Process(target=plot_create2_docker, args=(env, 2048, shared_returns, plot_running))
-    pp.start()
+    #pp = Process(target=plot_create2_docker, args=(env, 2048, shared_returns, plot_running))
+    #pp.start()
 
     # Create callback function for logging data from baselines TRPO learn
-    kindred_callback = create_callback(shared_returns, load_model_data)
+    kindred_callback = create_callback(shared_returns, load_model_path)
 
     # Train baselines PPO
-    learn(env,
-          policy_fn,
-          max_timesteps=1e6,
-          timesteps_per_actorbatch=512,
-          clip_param=0.2,
-          entcoeff=0.0,
-          optim_epochs=10,
-          optim_stepsize=0.00005,
-          optim_batchsize=16,
-          gamma=0.96836,
-          lam=0.99944,
-          schedule="linear",
-          callback=kindred_callback,
+    model = learn(
+        env,
+        policy_fn,
+        max_timesteps=10000,
+        timesteps_per_actorbatch=666,
+        clip_param=0.2,
+        entcoeff=0.0,
+        optim_epochs=10,
+        optim_stepsize=0.00005,
+        optim_batchsize=16,
+        gamma=0.96836,
+        lam=0.99944,
+        schedule="linear",
+        callback=kindred_callback,
     )
 
+    print(model)
+    model_data = {
+        "model": model,
+        "hidden_sizes": hidden_sizes
+    }
+
+    save_f = open('myfile.pkl', 'wb')
+    pkl.dump(model_data, save_f)
+    save_f.close()
+
     # Safely terminate plotter process
-    plot_running.value = 0  # shutdown ploting process
-    time.sleep(2)
-    pp.join()
+    #plot_running.value = 0  # shutdown ploting process
+    #time.sleep(2)
+    #pp.join()
 
     env.close()
 
