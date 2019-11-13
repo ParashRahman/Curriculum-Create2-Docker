@@ -9,8 +9,9 @@ import tempfile, zipfile
 import numpy as np
 
 
-def create_callback(shared_returns, load_model_path=None):
+def create_callback(shared_returns, save_model_basepath, load_model_path=None):
     builtins.shared_returns = shared_returns
+    builtins.save_model_basepath = save_model_basepath
     builtins.load_model_path = load_model_path
 
     def kindred_callback(locals, globals):
@@ -18,15 +19,11 @@ def create_callback(shared_returns, load_model_path=None):
         saver = tf.train.Saver()
 
         shared_returns = globals['__builtins__']['shared_returns']
+        savebasepath = globals['__builtins__']['save_model_basepath']
         if locals['iters_so_far'] == 0:
-            path = globals['__builtins__']['load_model_path']
-            if path is not None:
-                # tf.reset_default_graph()
-                # saver = tf.train.import_meta_graph(path + '.meta')
-                saver.restore(tf.get_default_session(), path)
-                # tf_load_session_from_pickled_model(globals['__builtins__']['load_model_data'])
-                for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
-                    print(i.eval())
+            loadpath = globals['__builtins__']['load_model_path']
+            if loadpath is not None:
+                saver.restore(tf.get_default_session(), loadpath)
         else:
             ep_rets = locals['seg']['ep_rets']
             ep_lens = locals['seg']['ep_lens']
@@ -38,12 +35,12 @@ def create_callback(shared_returns, load_model_path=None):
                     shared_returns['episodic_lengths'] += ep_lens
                     shared_returns['episodic_ss'] += ep_ss
                     shared_returns['write_lock'] = False
-                    np.save('ep_lens',
+                    np.save(savebasepath+'data/ep_lens',
                             np.array(shared_returns['episodic_lengths']))
-                    np.save('ep_rets',
+                    np.save(savebasepath+'data/ep_rets',
                             np.array(shared_returns['episodic_returns']))
-                    np.save('ep_ss',
+                    np.save(savebasepath+'data/ep_ss',
                             np.array(shared_returns['episodic_ss']))
-        fname = 'saved/model' + str(locals['iters_so_far']) + '.ckpt'
+        fname = savebasepath+'/models/' + str(locals['iters_so_far']) + '.ckpt'
         saver.save(tf.get_default_session(), fname)
     return kindred_callback

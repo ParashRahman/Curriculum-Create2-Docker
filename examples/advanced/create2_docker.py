@@ -9,6 +9,7 @@ import copy
 import numpy as np
 import pickle as pkl
 import baselines.common.tf_util as U
+import os
 
 import senseact.devices.create2.create2_config as create2_config
 
@@ -26,16 +27,28 @@ from helper import create_callback
 
 def main():
     # optionally use a pretrained model
+    save_model_path = None
     load_model_path = None
-
+    load_trained_model = False
     hidden_sizes = (64, 64)
-
-    if len(sys.argv) > 1:
-        load_model_path = sys.argv[1]
+    
+    if len(sys.argv) > 2:# load model
+        load_trained_model = True
+    
+    save_model_path = sys.argv[1] # saved/uniform/X/Y/Z/
+    os.makedirs(save_model_path, exist_ok=True)
+    run_dirs = os.listdir(save_model_path)
+    os.makedirs(save_model_path+'run_'+str(len(run_dirs)+1), exist_ok=True)
+    os.makedirs(save_model_path+'run_'+str(len(run_dirs)+1)+'/models', exist_ok=True)
+    os.makedirs(save_model_path+'run_'+str(len(run_dirs)+1)+'/data', exist_ok=True)
+    save_model_basepath = save_model_path+'run_'+str(len(run_dirs)+1)+'/'
+    
+    if load_trained_model:# loading true
+        load_model_path = sys.argv[2] # saved/uniform/X/Y/Z/run_1/model*
 
     # use fixed random state
-    rand_state = np.random.RandomState(1).get_state()
-    np.random.set_state(rand_state)
+    #rand_state = np.random.RandomState(1).get_state()
+    #np.random.set_state(rand_state)
     tf_set_seeds(np.random.randint(1, 2**31 - 1))
 
     # Create the Create2 docker environment
@@ -43,8 +56,8 @@ def main():
     env = Create2DockerEnv(30, np.full(9, 1/9),
                            port='/dev/ttyUSB0', ir_window=20,
                            ir_history=1,
-                           obs_history=1, dt=0.045,
-                           random_state=rand_state)
+                           obs_history=1, dt=0.045)
+                           #random_state=rand_state)
     env = NormalizedEnv(env)
 
     # Start environment processes
@@ -70,7 +83,7 @@ def main():
     #pp.start()
 
     # Create callback function for logging data from baselines TRPO learn
-    kindred_callback = create_callback(shared_returns, load_model_path)
+    kindred_callback = create_callback(shared_returns, save_model_basepath, load_model_path)
 
     # Train baselines PPO
     model = learn(
@@ -88,16 +101,6 @@ def main():
         schedule="linear",
         callback=kindred_callback,
     )
-
-    print(model)
-    model_data = {
-        "model": model,
-        "hidden_sizes": hidden_sizes
-    }
-
-    save_f = open('myfile.pkl', 'wb')
-    pkl.dump(model_data, save_f)
-    save_f.close()
 
     # Safely terminate plotter process
     #plot_running.value = 0  # shutdown ploting process

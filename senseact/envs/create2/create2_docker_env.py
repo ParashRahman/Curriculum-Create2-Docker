@@ -443,6 +443,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             np.concatenate(([create2_config.OPCODE_NAME_TO_CODE[opcode_name]], np.array(args).astype('i'))))
 
     def _wait_until_charged(self):
+        print('Charging')
         """Waits until Create 2 is sufficiently charged."""
         sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
         while sensor_window[-1][0]['battery charge'] < self._max_battery:
@@ -460,6 +461,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             time.sleep(50)
 
             sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
+        print('Charging done')
 
     def _wait_until_unwinded(self):
         """Waits until unwinded if the angle is high enough.
