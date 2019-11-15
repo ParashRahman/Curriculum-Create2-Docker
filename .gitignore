@@ -4,6 +4,4 @@ __pycache__
 *.pyc
 senseact/lib/
 senseact.egg-info/
-*.npy
 *.pkl
-saved/
