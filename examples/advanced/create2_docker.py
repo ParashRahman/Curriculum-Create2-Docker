@@ -30,7 +30,7 @@ def main():
     save_model_path = None
     load_model_path = None
     load_trained_model = False
-    hidden_sizes = (64, 64)
+    hidden_sizes = (64, 64, 64)
     
     if len(sys.argv) > 2:# load model
         load_trained_model = True
@@ -89,8 +89,8 @@ def main():
     model = learn(
         env,
         policy_fn,
-        max_timesteps=10000,
-        timesteps_per_actorbatch=666,
+        max_timesteps=100000,
+        timesteps_per_actorbatch=512,
         clip_param=0.2,
         entcoeff=0.0,
         optim_epochs=10,
