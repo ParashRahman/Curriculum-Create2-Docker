@@ -31,6 +31,10 @@ print(all_ss)
 print(all_ret)
 print(all_len)
 
+unique_ss, counts_ss = np.unique(all_ss, return_counts=True)
+print('Unique states ', unique_ss)
+print('Frequency of states ', counts_ss)
+
 assert(len(all_ss) == len(all_ret) and len(all_ret) == len(all_len))
 
 state_dict = dict()

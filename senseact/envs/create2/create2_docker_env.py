@@ -50,6 +50,7 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
             rllab_box:            whether we are using rllab algorithm or not
             **kwargs:             any other arguments to be passed to the base class
         """
+        print(episode_length_time, reset_distribution, port, ir_window, ir_history, obs_history, dt)
         self.reset_distribution = reset_distribution
         self._ir_window = ir_window
         self._ir_history = ir_history
