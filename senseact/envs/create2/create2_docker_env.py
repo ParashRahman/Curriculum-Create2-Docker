@@ -329,7 +329,8 @@ class Create2DockerEnv(RTRLBaseEnv, gym.Env):
         sensor_window, _, _ = self._sensor_comms[self._comm_name].sensor_buffer.read()
 
         if sensor_window[-1][0]['oi mode'] != 2:
-            print("_reset_: we are not in safe mode!")
+            print("_reset_: we are not in safe mode! Episode reset has been messed up.")
+            exit()
         """
         while sensor_window[-1][0]['oi mode'] != 2:
             logging.warning("Create2 not in SAFE mode, reattempting... (might require human intervention).")
