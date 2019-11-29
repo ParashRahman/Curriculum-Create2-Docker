@@ -1,9 +1,11 @@
 import numpy as np
 
 import os
+import math
+import decimal
 import sys
 import matplotlib.pyplot as plt
-
+from pprint import pprint
 
 path = sys.argv[1]
 
@@ -46,8 +48,46 @@ for index, s in enumerate(all_ss):
     state_dict[s][1].append(all_len[index])
     state_dict[s][2].append(index)
 
+ordering = []
 for s, data in state_dict.items():
     plt.plot(data[2], data[0], label='state '+str(int(s)))
+    ordering.append((s, np.mean(state_dict[s][0]), np.std(state_dict[s][0])))
+ordering.sort(key=lambda x: x[1])
+for stage in range(1, len(ordering) + 1):
+    print('slice', np.array(ordering)[0:stage,1:2])
+    sliced = -1 * np.array(ordering)[0:stage,1:2] / 107.37 + 16.09871
+    print(sliced/np.sum(sliced))
 
+"""
+print(ordering)
+tots_m_order = np.full(len(ordering), np.sum(ordering)) - ordering
+print(tots_m_order/np.sum(tots_m_order))
+"""
+"""
+ereturns = []
+for i in range(len(ordering)):
+    ereturns.append(decimal.Decimal(math.e) ** decimal.Decimal(ordering[i][1]))
+
+sum_e = decimal.Decimal(0.0)
+for exi in ereturns:
+    sum_e += exi
+
+# calculate softmax
+for exi in ereturns:
+    print(exi/sum_e)
+
+# calculate archit schema
+sume_exi = []
+tot_sume_exi = decimal.Decimal(0.0)
+for exi in ereturns:
+    sume_exi.append(sum_e - exi)
+    tot_sume_exi += (sum_e - exi)
+
+probs = []
+for exi in ereturns:
+    probs.append( (sum_e - exi) / tot_sume_exi)
+    #     probs.append(tot_sume_exi - exi
+print(probs)
+"""
 plt.legend()
 plt.show()

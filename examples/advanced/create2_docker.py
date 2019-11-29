@@ -31,10 +31,10 @@ def main():
     load_model_path = None
     load_trained_model = False
     hidden_sizes = (64, 64, 64)
-    
+
     if len(sys.argv) > 2:# load model
         load_trained_model = True
-    
+
     save_model_path = sys.argv[1] # saved/uniform/X/Y/Z/
     os.makedirs(save_model_path, exist_ok=True)
     run_dirs = os.listdir(save_model_path)
@@ -52,8 +52,8 @@ def main():
     tf_set_seeds(np.random.randint(1, 2**31 - 1))
 
     # Create the Create2 docker environment
-    # np.array([1, 0, 0, 0, 0, 0, 0, 0, 0])
-    env = Create2DockerEnv(30, np.full(9, 1/9),
+    distro = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0])
+    env = Create2DockerEnv(30, distro,
                            port='/dev/ttyUSB0', ir_window=20,
                            ir_history=1,
                            obs_history=1, dt=0.045)
