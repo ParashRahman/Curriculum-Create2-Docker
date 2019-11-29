@@ -7,6 +7,9 @@ import sys
 import matplotlib.pyplot as plt
 from pprint import pprint
 
+def number_of_steps_till_episode(steps_per, ep):
+    return np.sum(steps_per[0:ep])
+
 path = sys.argv[1]
 
 run_folders = os.listdir(path)
@@ -57,6 +60,10 @@ for stage in range(1, len(ordering) + 1):
     print('slice', np.array(ordering)[0:stage,1:2])
     sliced = -1 * np.array(ordering)[0:stage,1:2] / 107.37 + 16.09871
     print(sliced/np.sum(sliced))
+
+print(number_of_steps_till_episode(all_len, 64))
+print(number_of_steps_till_episode(all_len, 65))
+print(number_of_steps_till_episode(all_len, 66))
 
 """
 print(ordering)
