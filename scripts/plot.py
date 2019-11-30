@@ -36,6 +36,7 @@ print(all_ss)
 print(all_ret)
 print(all_len)
 
+
 unique_ss, counts_ss = np.unique(all_ss, return_counts=True)
 print('Unique states ', unique_ss)
 print('Frequency of states ', counts_ss)
@@ -61,9 +62,12 @@ for stage in range(1, len(ordering) + 1):
     sliced = -1 * np.array(ordering)[0:stage,1:2] / 107.37 + 16.09871
     print(sliced/np.sum(sliced))
 
-print(number_of_steps_till_episode(all_len, 64))
-print(number_of_steps_till_episode(all_len, 65))
-print(number_of_steps_till_episode(all_len, 66))
+print(number_of_steps_till_episode(all_len, len(all_len)))
+print(number_of_steps_till_episode(all_len, len(all_len)))
+print(number_of_steps_till_episode(all_len, len(all_len)))
+
+
+
 
 """
 print(ordering)
