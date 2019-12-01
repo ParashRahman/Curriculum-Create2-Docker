@@ -56,7 +56,7 @@ ordering = []
 for s, data in state_dict.items():
     print("STATE ", s, np.mean(data[0]))
     smoothed = data[0]
-    smoothing_factor = len(data[0]) - 1
+    smoothing_factor = 0
     for idex in range(smoothing_factor,len(smoothed)):
         smoothed[idex] = (np.mean(smoothed[idex - smoothing_factor:idex+1]))
     plt.plot(data[2], smoothed, label='state '+str(int(s)))

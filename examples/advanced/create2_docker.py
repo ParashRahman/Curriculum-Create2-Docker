@@ -56,7 +56,10 @@ def main():
     # distro = np.array([0.575, 0.425, 0, 0, 0, 0, 0, 0, 0])
     # distro = np.array([0.25, 0.2, 0.55, 0, 0, 0, 0, 0, 0])
     # distro = np.array([0.1, 0.1, 0.25, 0.55, 0, 0, 0, 0, 0])
-    distro = np.array([0.05, 0.05, 0.15, 0.275, 0, 0, 0, 0.475, 0])
+    # FAILED: distro = np.array([0.05, 0.05, 0.15, 0.275, 0, 0, 0, 0.475, 0])
+    # FAILED: distro = np.array([0.05, 0.05, 0.15, 0.275, 0, 0.475, 0, 0, 0])
+    distro = np.array([0.10, 0.05, 0.10, 0.35, 0, 0.4, 0, 0, 0])
+
     env = Create2DockerEnv(30, distro,
                            port='/dev/ttyUSB0', ir_window=20,
                            ir_history=1,
