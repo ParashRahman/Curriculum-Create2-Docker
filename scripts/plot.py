@@ -35,7 +35,7 @@ for run in run_folders:
 print(all_ss)
 print(all_ret)
 print(all_len)
-
+print("NUM_EPS", len(all_ss))
 
 unique_ss, counts_ss = np.unique(all_ss, return_counts=True)
 print('Unique states ', unique_ss)
@@ -54,21 +54,22 @@ for index, s in enumerate(all_ss):
 
 ordering = []
 for s, data in state_dict.items():
-    plt.plot(data[2], data[0], label='state '+str(int(s)))
+    print("STATE ", s, np.mean(data[0]))
+    smoothed = data[0]
+    smoothing_factor = len(data[0]) - 1
+    for idex in range(smoothing_factor,len(smoothed)):
+        smoothed[idex] = (np.mean(smoothed[idex - smoothing_factor:idex+1]))
+    plt.plot(data[2], smoothed, label='state '+str(int(s)))
     ordering.append((s, np.mean(state_dict[s][0]), np.std(state_dict[s][0])))
 ordering.sort(key=lambda x: x[1])
+pprint(ordering)
 for stage in range(1, len(ordering) + 1):
     print('slice', np.array(ordering)[0:stage,1:2])
     sliced = -1 * np.array(ordering)[0:stage,1:2] / 107.37 + 16.09871
     print(sliced/np.sum(sliced))
 
-print(number_of_steps_till_episode(all_len, len(all_len)))
-print(number_of_steps_till_episode(all_len, len(all_len)))
-print(number_of_steps_till_episode(all_len, len(all_len)))
-
-
-
-
+print(all_len)
+print(number_of_steps_till_episode(all_len, 120))
 """
 print(ordering)
 tots_m_order = np.full(len(ordering), np.sum(ordering)) - ordering
