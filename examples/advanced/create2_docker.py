@@ -59,7 +59,8 @@ def main():
     # FAILED: distro = np.array([0.05, 0.05, 0.15, 0.275, 0, 0, 0, 0.475, 0])
     # FAILED: distro = np.array([0.05, 0.05, 0.15, 0.275, 0, 0.475, 0, 0, 0])
     # FAILED: distro = np.array([0.10, 0.05, 0.10, 0.35, 0, 0.4, 0, 0, 0])
-    distro = np.array([0.10, 0.05, 0.10, 0.375, 0.375, 0, 0, 0, 0])
+    #distro = np.array([0.10, 0.05, 0.10, 0.375, 0.375, 0, 0, 0, 0])
+    distro = np.array([0.025, 0.05, 0.05, 0.25, 0.25, 0.375, 0, 0, 0]) # part 1, first 100 episodes
 
     env = Create2DockerEnv(30, distro,
                            port='/dev/ttyUSB0', ir_window=20,
