@@ -72,6 +72,7 @@ print(all_len)
 print(number_of_steps_till_episode(all_len, 120))
 print(np.mean(all_ret))
 print(len(all_ret))
+
 """
 print(ordering)
 tots_m_order = np.full(len(ordering), np.sum(ordering)) - ordering
