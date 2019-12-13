@@ -69,7 +69,7 @@ for stage in range(1, len(ordering) + 1):
     print(sliced/np.sum(sliced))
 
 print(all_len)
-print(number_of_steps_till_episode(all_len, 120))
+print('hi', number_of_steps_till_episode(all_len, 200))
 print(np.mean(all_ret))
 print(len(all_ret))
 
